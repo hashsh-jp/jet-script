@@ -272,7 +272,11 @@ async function transcribeSingleFile(
   if (!result?.segments) {
     throw new Error("Whisper API: segments が返されませんでした");
   }
-  return result.segments as Array<{ start: number; end: number; text: string }>;
+  return (result.segments as Array<{ start: number; end: number; text: string }>).map((s) => ({
+    start: round01(s.start),
+    end: round01(s.end),
+    text: s.text,
+  }));
 }
 
 // ── 大きなファイルの分割処理 ──
