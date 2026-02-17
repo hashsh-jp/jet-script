@@ -14,11 +14,12 @@ hashshnet動画編集ツール - 動画から自動で字幕付き動画を生�
 
 ### 必要なもの
 
-始める前に、以下の3つを用意してください。
+始める前に、以下の4つを用意してください。
 
 | 必要なもの | 説明 |
 |-----------|------|
 | **Node.js 18以上** | JavaScriptを動かすためのソフト |
+| **ffmpeg** | 動画から音声を抽出するために必須 |
 | **OpenAI APIキー** | AIの文字起こしに使います（有料） |
 | **元動画 `base.mp4`** | 字幕をつけたい動画ファイル |
 
@@ -45,6 +46,15 @@ cd video-edit
 
 > ダウンロードした場所によってパスが違います。Finderで `video-edit` フォルダを見つけて、ターミナルにドラッグ＆ドロップすると自動でパスが入ります。
 > 例: `cd /Users/あなたのユーザー名/Desktop/video-edit`
+
+#### ステップ 2.5: ffmpeg をインストール
+
+```bash
+brew install ffmpeg
+ffmpeg -version
+```
+
+> `ffmpeg -version` が表示されればOKです。`command not found` が出る場合はインストールに失敗しています。
 
 #### ステップ 3: パッケージをインストール（ルート）
 
@@ -93,7 +103,7 @@ OPENAI_API_KEY=sk-ここに自分のAPIキーを貼る
 以下のコマンドで全部揃っているか確認できます。
 
 ```bash
-node -v && echo "--- Node.js OK ---" && ls base.mp4 && echo "--- base.mp4 OK ---" && cat .env | head -1 && echo "--- .env OK ---" && ls node_modules > /dev/null && echo "--- npm install OK ---" && ls remotion/node_modules > /dev/null && echo "--- remotion npm install OK ---"
+node -v && echo "--- Node.js OK ---" && ffmpeg -version && echo "--- ffmpeg OK ---" && ls base.mp4 && echo "--- base.mp4 OK ---" && cat .env | head -1 && echo "--- .env OK ---" && ls node_modules > /dev/null && echo "--- npm install OK ---" && ls remotion/node_modules > /dev/null && echo "--- remotion npm install OK ---"
 ```
 
 全部 `OK` と表示されれば準備完了です。
@@ -123,6 +133,15 @@ cd video-edit
 
 > ダウンロードした場所によってパスが違います。エクスプローラーで `video-edit` フォルダを開いて、アドレスバーに `cmd` と入力してEnterを押すと、そのフォルダでコマンドプロンプトが開きます。
 > 例: `cd C:\Users\あなたのユーザー名\Desktop\video-edit`
+
+#### ステップ 2.5: ffmpeg をインストール
+
+```powershell
+winget install --id Gyan.FFmpeg -e
+ffmpeg -version
+```
+
+> `ffmpeg -version` が表示されればOKです。表示されない場合は新しいターミナルを開き直してください。
 
 #### ステップ 3: パッケージをインストール（ルート）
 
@@ -169,7 +188,7 @@ OPENAI_API_KEY=sk-ここに自分のAPIキーを貼る
 #### セットアップ完了の確認（Windows）
 
 ```cmd
-node -v && echo --- Node.js OK --- && dir base.mp4 && echo --- base.mp4 OK --- && type .env && echo --- .env OK --- && dir node_modules >nul && echo --- npm install OK --- && dir remotion\node_modules >nul && echo --- remotion npm install OK ---
+node -v && echo --- Node.js OK --- && ffmpeg -version && echo --- ffmpeg OK --- && dir base.mp4 && echo --- base.mp4 OK --- && type .env && echo --- .env OK --- && dir node_modules >nul && echo --- npm install OK --- && dir remotion\node_modules >nul && echo --- remotion npm install OK ---
 ```
 
 全部 `OK` と表示されれば準備完了です。
