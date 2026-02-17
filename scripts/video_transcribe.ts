@@ -21,6 +21,9 @@ const SETTINGS = {
   timeUnitSec: 0.1,
   mergeGapSec: 0.3,
   minSegmentDurationSec: 0.3,
+  /** セリフ前後に追加するマージン（秒）。途中カット防止用 */
+  marginBeforeSec: 0.5,
+  marginAfterSec: 0.5,
 };
 
 // ノイズ表現のフィルタ
@@ -209,28 +212,37 @@ async function main() {
     }
   }
 
-  // 7. cut タイムライン付与（セリフの無い区間は詰めるが、カット間に1秒のゆとりを持たせる）
+  // 7. マージン付与（セリフの頭・尾が切れないよう前後に余裕を持たせる）
+  // ffprobe で元動画の長さを取得
+  let videoDuration = Infinity;
+  try {
+    const durStr = execSync(
+      `ffprobe -v error -show_entries format=duration -of csv=p=0 "${INPUT_VIDEO}"`,
+      { encoding: "utf-8" }
+    ).trim();
+    const parsed = parseFloat(durStr);
+    if (Number.isFinite(parsed) && parsed > 0) videoDuration = parsed;
+  } catch {}
+
+  for (let i = 0; i < merged.length; i++) {
+    const seg = merged[i];
+    const prevEnd = i > 0 ? merged[i - 1].origEnd : 0;
+    const nextStart = i + 1 < merged.length ? merged[i + 1].origStart : videoDuration;
+
+    // マージンを追加（前のセグメント末尾・次のセグメント開始を侵害しない）
+    seg.origStart = round01(Math.max(prevEnd, seg.origStart - SETTINGS.marginBeforeSec));
+    seg.origEnd = round01(Math.min(nextStart, seg.origEnd + SETTINGS.marginAfterSec));
+  }
+
+  // 8. cut タイムライン付与（セリフの無い区間は詰めて連続配置 = ブラックアウト防止）
   let cursor = 0;
   const finalSegments = merged.map((s, i) => {
     const duration = round01(s.origEnd - s.origStart);
     const cutStart = round01(cursor);
     const cutEnd = round01(cursor + duration);
 
-    // 次のセグメントへの間隔を計算
-    let intervalToNext = 1.0; // デフォルト1秒のゆとり
-    if (i + 1 < merged.length) {
-      const nextSegment = merged[i + 1];
-      const naturalGap = nextSegment.origStart - s.origEnd;
-      // 元動画で1秒以下の間隔の場合は、その自然な間隔を使う（自然につなげる）
-      if (naturalGap < 1.0) {
-        intervalToNext = Math.max(0, round01(naturalGap));
-      }
-    } else {
-      // 最後のセグメントには間隔不要
-      intervalToNext = 0;
-    }
-
-    cursor = round01(cutEnd + intervalToNext);
+    // 隙間ゼロで次のセグメントに繋げる
+    cursor = cutEnd;
 
     return {
       id: `seg_${String(i).padStart(4, "0")}`,
@@ -240,7 +252,7 @@ async function main() {
     };
   });
 
-  // 8. scripts.json 生成
+  // 9. scripts.json 生成
   const scriptsJson = {
     source: { videoPath: "base.mp4" },
     settings: SETTINGS,
@@ -263,7 +275,7 @@ async function transcribeSingleFile(
     model: "whisper-1",
     file: fs.createReadStream(wavPath),
     response_format: "verbose_json",
-    timestamp_granularities: ["segment"],
+    timestamp_granularities: ["segment", "word"],
     language: "ja",
   });
 
@@ -271,11 +283,29 @@ async function transcribeSingleFile(
   if (!result?.segments) {
     throw new Error("Whisper API: segments が返されませんでした");
   }
-  return (result.segments as Array<{ start: number; end: number; text: string }>).map((s) => ({
-    start: round01(s.start),
-    end: round01(s.end),
-    text: s.text,
-  }));
+
+  // wordレベルのタイムスタンプがあれば、セグメントの開始・終了をより精密に補正
+  const words: Array<{ word: string; start: number; end: number }> | undefined = result.words;
+
+  return (result.segments as Array<{ start: number; end: number; text: string }>).map((s) => {
+    let start = s.start;
+    let end = s.end;
+
+    // wordタイムスタンプでセグメント境界を精密化
+    if (words && words.length > 0) {
+      const segWords = words.filter((w) => w.start >= s.start - 0.5 && w.end <= s.end + 0.5);
+      if (segWords.length > 0) {
+        start = Math.min(start, segWords[0].start);
+        end = Math.max(end, segWords[segWords.length - 1].end);
+      }
+    }
+
+    return {
+      start: round01(start),
+      end: round01(end),
+      text: s.text,
+    };
+  });
 }
 
 // ── 大きなファイルの分割処理 ──
