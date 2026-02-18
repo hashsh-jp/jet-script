@@ -1,9 +1,9 @@
 /**
- * video_render_jet.ts
+ * video_render.ts
  *
- * scripts.json → Remotion render → jet.mp4
+ * scripts.json → Remotion render → script.mp4 (字幕付きジェットカット)
  *
- * 実行: npm run all (video-edit ディレクトリ内で実行)
+ * 実行: npx tsx function/code-scripts/hashshnet/video-edit/video_render.ts
  */
 import "dotenv/config";
 import fs from "fs";
@@ -14,14 +14,15 @@ import { prepareCombinedBase } from "./base-video";
 
 const BASE_DIR = process.cwd();
 const SCRIPTS_JSON = path.join(BASE_DIR, "scripts.json");
-const OUTPUT = path.join(BASE_DIR, "jet.mp4");
 const REMOTION_ENTRY = path.join(BASE_DIR, "remotion/src/index.ts");
 const PUBLIC_DIR = path.join(BASE_DIR, "remotion/public");
 
 const FPS = 30;
 
+const OUTPUT = path.join(BASE_DIR, "script.mp4");
+
 async function main() {
-  console.log("=== video_render_jet ===");
+  console.log("=== video_render (script.mp4) ===");
 
   // 1. scripts.json 読み込み
   if (!fs.existsSync(SCRIPTS_JSON)) {
@@ -44,38 +45,32 @@ async function main() {
     throw new Error(`base.mp4 が見つかりません: ${baseVideoSrc}`);
   }
   fs.mkdirSync(PUBLIC_DIR, { recursive: true });
-  // 既存ファイル/シンボリックリンクを削除してコピー
   try { fs.unlinkSync(baseVideoDst); } catch { }
   fs.copyFileSync(baseVideoSrc, baseVideoDst);
   console.log("base.mp4 → public/ にコピー完了");
 
-  // 2. Remotion バンドル
+  // 2. Remotion バンドル (1回だけ)
   console.log("Remotion バンドル中...");
   const bundleLocation = await bundle({
     entryPoint: REMOTION_ENTRY,
     publicDir: PUBLIC_DIR,
   });
 
-  // 3. コンポジション取得
+  // 3. 共通パラメータ
   const lastSeg = segments[segments.length - 1];
   const totalDuration = Math.ceil(lastSeg.cut.end * FPS);
 
-  const inputProps = {
-    segments: segments,
-    fps: FPS,
-  };
+  const inputProps = { segments, fps: FPS, withSubtitle: true };
+
+  console.log(`レンダリング開始: ${totalDuration} フレーム (${(totalDuration / FPS).toFixed(1)}秒)`);
 
   const composition = await selectComposition({
     serveUrl: bundleLocation,
-    id: "JetComposition",
+    id: "ScriptComposition",
     inputProps,
   });
-
-  // durationを上書き
   composition.durationInFrames = totalDuration;
 
-  // 4. レンダリング
-  console.log(`レンダリング開始: ${totalDuration} フレーム (${(totalDuration / FPS).toFixed(1)}秒)`);
   await renderMedia({
     composition,
     serveUrl: bundleLocation,
@@ -84,7 +79,7 @@ async function main() {
     inputProps,
   });
 
-  console.log(`jet.mp4 生成完了: ${OUTPUT}`);
+  console.log(`script.mp4 生成完了: ${OUTPUT}`);
 }
 
 main().catch((err) => {

@@ -1,20 +1,23 @@
 import React from "react";
 import { Sequence, AbsoluteFill } from "remotion";
 import { SpeechClip } from "./components/SpeechClip";
+import { SubtitleLayer } from "./components/SubtitleLayer";
 import { secToFrames } from "./lib/time";
 import type { Segment } from "./lib/loadScripts";
 
-interface JetCompositionProps {
+interface VideoCompositionProps {
   segments: Segment[];
   fps: number;
+  withSubtitle?: boolean;
 }
 
 /**
- * 無音全カット: セグメントの orig 区間だけを cut タイムラインに並べて連結
+ * 統合コンポジション: 映像レイヤー + オプションで字幕レイヤー
  */
-export const JetComposition: React.FC<JetCompositionProps> = ({
+export const VideoComposition: React.FC<VideoCompositionProps> = ({
   segments,
   fps,
+  withSubtitle = false,
 }) => {
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
@@ -27,6 +30,12 @@ export const JetComposition: React.FC<JetCompositionProps> = ({
           </Sequence>
         );
       })}
+
+      {withSubtitle && (
+        <AbsoluteFill>
+          <SubtitleLayer segments={segments} />
+        </AbsoluteFill>
+      )}
     </AbsoluteFill>
   );
 };
