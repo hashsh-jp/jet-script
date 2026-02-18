@@ -14,7 +14,6 @@ const SCRIPTS_DIR = __dirname;
 const steps = [
   { name: "video_transcribe", file: "video_transcribe.ts" },
   { name: "video_render_jet", file: "video_render_jet.ts" },
-  { name: "video_render_script", file: "video_render_script.ts" },
 ];
 
 async function main() {
