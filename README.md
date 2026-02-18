@@ -138,15 +138,41 @@ ffmpeg -version
 
 ---
 
-### ステップ 3: リポジトリを取得
+### ステップ 3: Git をインストールしてリポジトリを取得
 
 すでにフォルダがある場合はこのステップを飛ばしてください。
 
+#### 3-1. Git をインストール
+
+まず Git が入っているか確認します：
+
 ```bash
-# Git でクローン（GitHubの場合）
+git --version
+```
+
+`git version 2.x.x` のように表示されればスキップしてください。
+`command not found` が出た場合はインストールします：
+
+```bash
+brew install git
+```
+
+確認：
+
+```bash
+git --version
+```
+
+`git version 2.x.x` と表示されればOKです。
+
+#### 3-2. リポジトリをクローン
+
+```bash
 git clone <リポジトリのURL>
 cd jet-script
 ```
+
+> `<リポジトリのURL>` は GitHub のリポジトリページで「Code」ボタンをクリックすると表示されます。
 
 または、受け取った zip ファイルを展開して、ターミナルでそのフォルダに移動してください。
 
