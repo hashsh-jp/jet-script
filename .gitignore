@@ -2,3 +2,11 @@
 /remotion/node_modules
 /node_modules
 .env
+/base*.mp4
+/jet.mp4
+/script.mp4
+/titled.mp4
+/scripts.json
+/scripts_base.json
+/scripts_merged.json
+/remotion/public/base.mp4

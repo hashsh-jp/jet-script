@@ -5,20 +5,12 @@ import { SubtitleLayer } from "./components/SubtitleLayer";
 import { secToFrames } from "./lib/time";
 import type { Segment } from "./lib/loadScripts";
 
-interface VideoCompositionProps {
+interface ScriptCompositionProps {
   segments: Segment[];
   fps: number;
-  withSubtitle?: boolean;
 }
 
-/**
- * 統合コンポジション: 映像レイヤー + オプションで字幕レイヤー
- */
-export const VideoComposition: React.FC<VideoCompositionProps> = ({
-  segments,
-  fps,
-  withSubtitle = false,
-}) => {
+export const ScriptComposition: React.FC<ScriptCompositionProps> = ({ segments, fps }) => {
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       {segments.map((seg) => {
@@ -31,11 +23,9 @@ export const VideoComposition: React.FC<VideoCompositionProps> = ({
         );
       })}
 
-      {withSubtitle && (
-        <AbsoluteFill>
-          <SubtitleLayer segments={segments} />
-        </AbsoluteFill>
-      )}
+      <AbsoluteFill>
+        <SubtitleLayer segments={segments} />
+      </AbsoluteFill>
     </AbsoluteFill>
   );
-};
+}

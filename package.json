@@ -1,20 +1,30 @@
 {
-  "name": "video-edit",
-  "version": "1.0.0",
-  "description": "hashshnet動画編集ツール - .mp4から字幕付き動画を自動生成",
+  "name": "jet-script",
+  "version": "2.0.0",
+  "description": "Standalone short video editing workspace for external distribution",
   "scripts": {
-    "all": "tsx scripts/video_all.ts",
-    "help": "node -e \"console.log('\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n📹  hashshnet 動画編集ツール\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n\\n🎬 このツールは、動画ファイル（base.mp4）から\\n   AIが自動で文字起こしをして、\\n   字幕付きの動画を2種類生成します。\\n\\n\\n【 初回準備 】\\n\\n  1️⃣  パッケージをインストールする\\n\\n      npm install\\n\\n      ※ 初回だけ必要です（少し時間がかかります）\\n\\n\\n  2️⃣  OpenAI APIキーを設定する\\n\\n      .env ファイルを作成して、以下を記入：\\n\\n      OPENAI_API_KEY=sk-your-api-key-here\\n\\n      ※ APIキーは https://platform.openai.com/api-keys で取得\\n      ※ .env.example をコピーして使えます：\\n         cp .env.example .env\\n\\n\\n  3️⃣  元動画を配置する\\n\\n      base.mp4 をこのディレクトリに置く\\n\\n\\n【 実行方法 】\\n\\n  npm run all\\n\\n  これだけです！\\n\\n  → 自動で文字起こし\\n  → script.mp4 を生成\\n  → jet.mp4 を生成\\n\\n  所要時間：7〜11分程度\\n\\n\\n【 生成されるファイル 】\\n\\n  ✓ scripts.json  → 文字起こし結果\\n  ✓ script.mp4    → 字幕付き動画（script版）\\n  ✓ jet.mp4       → 字幕付き動画（jet版）\\n\\n\\n【 困ったときは 】\\n\\n  ・エラーが出る\\n    → .env にAPIキーが正しく設定されているか確認\\n    → base.mp4 が配置されているか確認\\n\\n  ・途中で止まった\\n    → もう一度 npm run all を実行してください\\n\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n')\""
+    "all": "tsx scripts/video_edit.ts --profile=short --to-step=render --no-title",
+    "all:title": "tsx scripts/video_edit.ts --profile=short --title=\"${VIDEO_TITLE:-ここにタイトル}\"",
+    "video-edit": "tsx scripts/video_edit.ts --profile=short --to-step=render --no-title",
+    "video-edit-title": "tsx scripts/video_edit.ts --profile=short --title=\"${VIDEO_TITLE:-ここにタイトル}\"",
+    "transcribe": "tsx scripts/video_edit.ts --profile=short --to-step=transcribe --no-title",
+    "render": "tsx scripts/video_edit.ts --profile=short --from-step=render --to-step=render --no-title",
+    "base-video": "tsx scripts/base-video.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@remotion/bundler": "^4.0.296",
     "@remotion/renderer": "^4.0.296",
     "dotenv": "^17.2.3",
     "openai": "^6.17.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "remotion": "^4.0.296"
   },
   "devDependencies": {
     "@types/node": "^25.2.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
     "tsx": "^4.19.0",
     "typescript": "^5.6.3"
   },
