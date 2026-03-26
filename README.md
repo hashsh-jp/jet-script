@@ -1,8 +1,7 @@
 # jet-script
 
-`~/Downloads` 直下を作業場所として使います。`base.mp4` もしくは `base1.mp4`, `base2.mp4`... を置いて実行すると、AIで文字起こし・無音カット・字幕整形を行い、最後に `bgm.mp3` をミックスして以下を生成します。
+`~/Downloads` 直下を作業場所として使います。`base.mp4` もしくは `base1.mp4`, `base2.mp4`... を置いて実行すると、AIで文字起こし・無音カット・字幕整形を行い、最後に `bgm.mp3` をミックスして完成動画を生成します。
 
-- `scripts.json`
 - `jet.mp4`
 - `script.mp4`
 - `titled.mp4`（`VIDEO_TITLE` または `--title` 指定時のみ）
@@ -38,16 +37,18 @@ OPENAI_API_KEY=sk-proj-...
 ├── jet.mp4
 ├── script.mp4
 ├── titled.mp4
-├── scripts.json
-├── scripts_base.json
-├── scripts_merged.json
 ├── bgm.mp3
-└── jet-script-work/
+└── .tmp/
+    └── jet-script-work/
+        ├── scripts.json
+        ├── scripts_base.json
+        └── scripts_merged.json
 ```
 
 - 元動画は `~/Downloads` 直下に置きます。
-- 実行時は Downloads 直下の元動画を `jet-script-work/` にコピーして処理します。
-- 完成した動画と `scripts.json` は `~/Downloads` 直下に出力されます。
+- 実行時は Downloads 直下の元動画を `.tmp/jet-script-work/` にコピーして処理します。
+- 完成した動画だけ `~/Downloads` 直下に出力されます。
+- `scripts.json` / `scripts_base.json` / `scripts_merged.json` は `~/Downloads/.tmp/jet-script-work/` で管理します。
 - 初回実行時、同梱の `bgm.mp3` が `~/Downloads/bgm.mp3` に自動コピーされます。必要なら手元の BGM ファイルに差し替えて管理できます。
 - 出力動画には `~/Downloads/bgm.mp3` が自動でミックスされます。
 - 複数ファイルを先につなぎたい場合は、`base1.mp4`, `base2.mp4` ... のように置けば実行時に自動結合されます。
@@ -74,7 +75,7 @@ VIDEO_TITLE="ここにタイトル" npm run all:title
 npm run transcribe
 ```
 
-`scripts.json` から再レンダリングだけ:
+`.tmp/jet-script-work/scripts.json` から再レンダリングだけ:
 
 ```bash
 npm run render
@@ -88,14 +89,14 @@ npm run base-video
 
 ## 出力物
 
-- `~/Downloads/scripts_base.json`: Whisper 生データの保存
-- `~/Downloads/scripts_merged.json`: AI整形前のマージ結果
-- `~/Downloads/scripts.json`: 最終的なタイムライン
 - `~/Downloads/jet.mp4`: 無音全カット版 + BGM
 - `~/Downloads/script.mp4`: 字幕付き版 + BGM
 - `~/Downloads/titled.mp4`: タイトル付き版 + BGM
+- `~/Downloads/.tmp/jet-script-work/scripts_base.json`: Whisper 生データの保存
+- `~/Downloads/.tmp/jet-script-work/scripts_merged.json`: AI整形前のマージ結果
+- `~/Downloads/.tmp/jet-script-work/scripts.json`: 最終的なタイムライン
 
-`~/Downloads/jet-script-work/` は中間処理用の作業ディレクトリです。通常は Downloads 直下の入出力だけ見れば足ります。
+`~/Downloads/.tmp/jet-script-work/` は中間処理用の作業ディレクトリです。通常は Downloads 直下の入出力だけ見れば足ります。
 
 ## 同梱内容
 

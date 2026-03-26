@@ -72,7 +72,7 @@ function resolveWorkspacePaths(profile: Profile): WorkspacePaths {
   const downloadsDir = resolveDownloadsDir();
   const inputDir = downloadsDir;
   const outputDir = downloadsDir;
-  const workDir = path.join(downloadsDir, "jet-script-work");
+  const workDir = path.join(downloadsDir, ".tmp", "jet-script-work");
   const assetsDir = downloadsDir;
   const remotionPublicDir = resolvePublicDir(profile.remotionEntry);
 
@@ -109,13 +109,6 @@ function syncBundledAssets(assetsDir: string): void {
 }
 
 function copyOutputsToOutputDir(profile: Profile, workspace: WorkspacePaths, includeTitle: boolean): void {
-  const summaryFiles = ["scripts_base.json", "scripts_merged.json", "scripts.json"];
-  for (const fileName of summaryFiles) {
-    const sourcePath = path.join(workspace.workDir, fileName);
-    if (!fs.existsSync(sourcePath)) continue;
-    fs.copyFileSync(sourcePath, path.join(workspace.outputDir, fileName));
-  }
-
   for (const spec of profile.renders) {
     const sourcePath = path.join(workspace.workDir, spec.outputFile);
     if (!fs.existsSync(sourcePath)) continue;
@@ -711,7 +704,7 @@ async function stepTranscribe(profile: Profile, videoDir: string, workDir: strin
   const { settings, maxLineChars } = profile;
   const inputVideo = path.join(videoDir, "base.mp4");
   const tmpDir = path.join(workDir, ".tmp");
-  const outputJson = path.join(workDir, "scripts.json");
+  const outputJson = path.join(tmpDir, "scripts.json");
 
   if (!fs.existsSync(inputVideo)) {
     throw new Error(`入力ファイルが見つかりません: ${inputVideo}`);
@@ -755,7 +748,7 @@ async function stepTranscribe(profile: Profile, videoDir: string, workDir: strin
   }
 
   fs.writeFileSync(
-    path.join(workDir, "scripts_base.json"),
+    path.join(tmpDir, "scripts_base.json"),
     JSON.stringify({ source: { videoPath: "base.mp4" }, settings, segments: whisperSegments }, null, 2),
     "utf-8"
   );
@@ -826,7 +819,7 @@ async function stepTranscribe(profile: Profile, videoDir: string, workDir: strin
   }
 
   fs.writeFileSync(
-    path.join(workDir, "scripts_merged.json"),
+    path.join(tmpDir, "scripts_merged.json"),
     JSON.stringify(
       {
         source: { videoPath: "base.mp4" },
@@ -906,7 +899,7 @@ async function stepRender(
   workDir: string,
   publicDir: string
 ): Promise<void> {
-  const scriptsJsonPath = path.join(workDir, "scripts.json");
+  const scriptsJsonPath = path.join(workDir, ".tmp", "scripts.json");
   if (!fs.existsSync(scriptsJsonPath)) {
     throw new Error(`scripts.json が見つかりません: ${scriptsJsonPath}`);
   }
@@ -1074,6 +1067,7 @@ async function main(): Promise<void> {
   const workspace = resolveWorkspacePaths(profile);
   const videoDir = workspace.workDir;
   const workDir = workspace.workDir;
+  const tmpDir = path.join(workDir, ".tmp");
   const fromIdx = STEP_ORDER.indexOf(fromStep);
   const toIdx = STEP_ORDER.indexOf(toStep);
   const includeTitle = !noTitle && Boolean(title) && toIdx >= STEP_ORDER.indexOf("title");
@@ -1087,9 +1081,11 @@ async function main(): Promise<void> {
   console.log(`  inputDir     : ${workspace.inputDir}`);
   console.log(`  outputDir    : ${workspace.outputDir}`);
   console.log(`  assetsDir    : ${workspace.assetsDir}`);
-  console.log(`  workDir      : ${workDir}\n`);
+  console.log(`  workDir      : ${workDir}`);
+  console.log(`  tmpDir       : ${tmpDir}\n`);
 
   ensureDir(workDir);
+  ensureDir(tmpDir);
   syncBundledAssets(workspace.assetsDir);
 
   if (fromIdx <= STEP_ORDER.indexOf("transcribe")) {
@@ -1129,9 +1125,6 @@ async function main(): Promise<void> {
 
   console.log("=== 完了 ===");
   console.log("生成物:");
-  if (toIdx >= STEP_ORDER.indexOf("transcribe")) {
-    console.log(`  - ${path.join(workspace.outputDir, "scripts.json")}`);
-  }
   if (toIdx >= STEP_ORDER.indexOf("render")) {
     for (const spec of profile.renders) {
       console.log(`  - ${path.join(workspace.outputDir, spec.outputFile)}`);
@@ -1139,6 +1132,12 @@ async function main(): Promise<void> {
   }
   if (!noTitle && title && toIdx >= STEP_ORDER.indexOf("title")) {
     console.log(`  - ${path.join(workspace.outputDir, profile.title.outputFile)}`);
+  }
+  if (toIdx >= STEP_ORDER.indexOf("transcribe")) {
+    console.log("途中ファイル:");
+    console.log(`  - ${path.join(tmpDir, "scripts_base.json")}`);
+    console.log(`  - ${path.join(tmpDir, "scripts_merged.json")}`);
+    console.log(`  - ${path.join(tmpDir, "scripts.json")}`);
   }
 }
 
