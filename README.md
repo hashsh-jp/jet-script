@@ -13,7 +13,66 @@
 - `ffmpeg` / `ffprobe`
 - OpenAI API キー
 
+## Mac 環境構築
+
+新しい Mac でまだ開発環境が入っていない場合は、先に以下を実行してください。
+
+1. Xcode Command Line Tools を入れます。
+
+```bash
+xcode-select --install
+```
+
+1. Homebrew をインストールします。
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Apple Silicon Mac では、案内に従って `~/.zprofile` に以下を追加してください。
+
+```bash
+eval "$(/opt/homebrew/bin/brew shellenv)"
+```
+
+反映:
+
+```bash
+eval "$(/opt/homebrew/bin/brew shellenv)"
+```
+
+1. Homebrew が使えることを確認します。
+
+```bash
+brew --version
+```
+
+1. Git をインストールします。
+
+```bash
+brew install git
+```
+
+1. Git の初期設定をします。
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+```
+
+1. このリポジトリをクローンします。
+
+```bash
+cd ~/Desktop
+git clone <このリポジトリのURL>
+cd jet-script
+```
+
+SSH でクローンしたい場合は、必要に応じて GitHub などの公開鍵設定も先に行ってください。
+
 ## セットアップ
+
+Homebrew と Git の準備ができたら、このリポジトリ内で依存関係を入れます。
 
 ```bash
 npm install
