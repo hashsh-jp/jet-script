@@ -35,14 +35,14 @@ export interface Profile {
 }
 
 export const PROFILES: Record<string, Profile> = {
-  short: {
+  long: {
     baseDir: ".",
-    maxLineChars: 18,
+    maxLineChars: 27,
     settings: {
       timeUnitSec: 0.1,
       mergeGapSec: 0.1,
-      minSegmentDurationSec: 0.3,
-      marginBeforeSec: 0.2,
+      minSegmentDurationSec: 0.4,
+      marginBeforeSec: 0.3,
       marginAfterSec: 0.3,
     },
     remotionEntry: "remotion/src/index.ts",

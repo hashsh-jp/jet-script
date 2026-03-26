@@ -1,14 +1,14 @@
 {
   "name": "jet-script",
   "version": "2.0.0",
-  "description": "Standalone short video editing workspace for external distribution",
+  "description": "Standalone long video editing workspace for external distribution",
   "scripts": {
-    "all": "tsx scripts/video_edit.ts --profile=short --to-step=render --no-title",
-    "all:title": "tsx scripts/video_edit.ts --profile=short --title=\"${VIDEO_TITLE:-ここにタイトル}\"",
-    "video-edit": "tsx scripts/video_edit.ts --profile=short --to-step=render --no-title",
-    "video-edit-title": "tsx scripts/video_edit.ts --profile=short --title=\"${VIDEO_TITLE:-ここにタイトル}\"",
-    "transcribe": "tsx scripts/video_edit.ts --profile=short --to-step=transcribe --no-title",
-    "render": "tsx scripts/video_edit.ts --profile=short --from-step=render --to-step=render --no-title",
+    "all": "tsx scripts/video_edit.ts --profile=long --to-step=render --no-title",
+    "all:title": "tsx scripts/video_edit.ts --profile=long --title=\"${VIDEO_TITLE:-ここにタイトル}\"",
+    "video-edit": "tsx scripts/video_edit.ts --profile=long --to-step=render --no-title",
+    "video-edit-title": "tsx scripts/video_edit.ts --profile=long --title=\"${VIDEO_TITLE:-ここにタイトル}\"",
+    "transcribe": "tsx scripts/video_edit.ts --profile=long --to-step=transcribe --no-title",
+    "render": "tsx scripts/video_edit.ts --profile=long --from-step=render --to-step=render --no-title",
     "base-video": "tsx scripts/base-video.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },

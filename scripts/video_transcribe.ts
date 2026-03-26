@@ -4,7 +4,7 @@ import path from "path";
 const scriptPath = path.join(__dirname, "video_edit.ts");
 
 try {
-  execSync(`npx tsx "${scriptPath}" --profile=short --to-step=transcribe --no-title`, {
+  execSync(`npx tsx "${scriptPath}" --profile=long --to-step=transcribe --no-title`, {
     stdio: "inherit",
     cwd: path.resolve("."),
   });

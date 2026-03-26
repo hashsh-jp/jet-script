@@ -6,8 +6,8 @@ import { TitleComposition } from "./TitleComposition";
 import type { Segment } from "./lib/loadScripts";
 
 const FPS = 30;
-const WIDTH = 1080;
-const HEIGHT = 1920;
+const WIDTH = 1280;
+const HEIGHT = 720;
 
 const defaultProps = {
   segments: [] as Segment[],

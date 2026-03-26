@@ -23,7 +23,7 @@ export const SubtitleLayer: React.FC<SubtitleLayerProps> = ({ segments }) => {
     <div
       style={{
         position: "absolute",
-        bottom: 160,
+        bottom: 40,
         left: 0,
         right: 0,
         display: "flex",
@@ -33,7 +33,7 @@ export const SubtitleLayer: React.FC<SubtitleLayerProps> = ({ segments }) => {
     >
       <div
         style={{
-          maxWidth: "92%",
+          maxWidth: "88%",
         }}
       >
         {lines.map((line: string, i: number) => (
@@ -41,14 +41,14 @@ export const SubtitleLayer: React.FC<SubtitleLayerProps> = ({ segments }) => {
             key={i}
             style={{
               color: "#ffffff",
-              fontSize: 44,
+              fontSize: 32,
               fontWeight: 800,
               fontFamily: "'Noto Sans JP', 'Hiragino Sans', sans-serif",
               textAlign: "center",
               lineHeight: 1.4,
-              WebkitTextStroke: "6px #000000",
+              WebkitTextStroke: "5px #000000",
               textShadow:
-                "-4px 0 0 #000, 4px 0 0 #000, 0 -4px 0 #000, 0 4px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000",
+                "-3px 0 0 #000, 3px 0 0 #000, 0 -3px 0 #000, 0 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000",
               paintOrder: "stroke fill",
             }}
           >

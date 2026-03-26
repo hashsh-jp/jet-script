@@ -73,7 +73,7 @@ function resolveWorkspacePaths(profile: Profile): WorkspacePaths {
   const inputDir = downloadsDir;
   const outputDir = downloadsDir;
   const workDir = path.join(downloadsDir, ".tmp", "jet-script-work");
-  const assetsDir = downloadsDir;
+  const assetsDir = workDir;
   const remotionPublicDir = resolvePublicDir(profile.remotionEntry);
 
   for (const dir of [inputDir, outputDir, workDir, assetsDir, remotionPublicDir]) {
@@ -1035,7 +1035,7 @@ function parseArgs(): {
   const args = process.argv.slice(2);
   const get = (prefix: string) => args.find((arg) => arg.startsWith(prefix))?.slice(prefix.length) ?? null;
 
-  const profileName = get("--profile=") ?? "short";
+  const profileName = get("--profile=") ?? "long";
   const fromStepRaw = get("--from-step=") ?? "transcribe";
   const toStepRaw = get("--to-step=") ?? "title";
   const title = get("--title=");

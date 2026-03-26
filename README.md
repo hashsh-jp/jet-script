@@ -1,6 +1,6 @@
 # jet-script
 
-`~/Downloads` 直下を作業場所として使います。`base.mp4` もしくは `base1.mp4`, `base2.mp4`... を置いて実行すると、AIで文字起こし・無音カット・字幕整形を行い、最後に `bgm.mp3` をミックスして完成動画を生成します。
+`~/Downloads` 直下を作業場所として使います。既定は long 動画向け設定です。`base.mp4` もしくは `base1.mp4`, `base2.mp4`... を置いて実行すると、AIで文字起こし・無音カット・字幕整形を行い、最後に `bgm.mp3` をミックスして完成動画を生成します。
 
 - `jet.mp4`
 - `script.mp4`
@@ -37,9 +37,9 @@ OPENAI_API_KEY=sk-proj-...
 ├── jet.mp4
 ├── script.mp4
 ├── titled.mp4
-├── bgm.mp3
 └── .tmp/
     └── jet-script-work/
+        ├── bgm.mp3
         ├── scripts.json
         ├── scripts_base.json
         └── scripts_merged.json
@@ -48,9 +48,9 @@ OPENAI_API_KEY=sk-proj-...
 - 元動画は `~/Downloads` 直下に置きます。
 - 実行時は Downloads 直下の元動画を `.tmp/jet-script-work/` にコピーして処理します。
 - 完成した動画だけ `~/Downloads` 直下に出力されます。
-- `scripts.json` / `scripts_base.json` / `scripts_merged.json` は `~/Downloads/.tmp/jet-script-work/` で管理します。
-- 初回実行時、同梱の `bgm.mp3` が `~/Downloads/bgm.mp3` に自動コピーされます。必要なら手元の BGM ファイルに差し替えて管理できます。
-- 出力動画には `~/Downloads/bgm.mp3` が自動でミックスされます。
+- `scripts.json` / `scripts_base.json` / `scripts_merged.json` / `bgm.mp3` は `~/Downloads/.tmp/jet-script-work/` で管理します。
+- 初回実行時、同梱の `bgm.mp3` が `~/Downloads/.tmp/jet-script-work/bgm.mp3` に自動コピーされます。必要ならそのファイルを差し替えて管理できます。
+- 出力動画には `~/Downloads/.tmp/jet-script-work/bgm.mp3` が自動でミックスされます。
 - 複数ファイルを先につなぎたい場合は、`base1.mp4`, `base2.mp4` ... のように置けば実行時に自動結合されます。
 
 ## 実行
@@ -92,6 +92,7 @@ npm run base-video
 - `~/Downloads/jet.mp4`: 無音全カット版 + BGM
 - `~/Downloads/script.mp4`: 字幕付き版 + BGM
 - `~/Downloads/titled.mp4`: タイトル付き版 + BGM
+- `~/Downloads/.tmp/jet-script-work/bgm.mp3`: BGM 素材
 - `~/Downloads/.tmp/jet-script-work/scripts_base.json`: Whisper 生データの保存
 - `~/Downloads/.tmp/jet-script-work/scripts_merged.json`: AI整形前のマージ結果
 - `~/Downloads/.tmp/jet-script-work/scripts.json`: 最終的なタイムライン
