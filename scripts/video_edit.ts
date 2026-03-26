@@ -110,6 +110,7 @@ function syncBundledAssets(assetsDir: string): void {
 
 function copyOutputsToOutputDir(profile: Profile, workspace: WorkspacePaths, includeTitle: boolean): void {
   for (const spec of profile.renders) {
+    if (spec.publishToDownloads === false) continue;
     const sourcePath = path.join(workspace.workDir, spec.outputFile);
     if (!fs.existsSync(sourcePath)) continue;
     fs.copyFileSync(sourcePath, path.join(workspace.outputDir, spec.outputFile));
@@ -224,14 +225,14 @@ function applyBgmToOutputs(profile: Profile, workspace: WorkspacePaths, includeT
   const tempDir = fs.mkdtempSync(path.join(workspace.workDir, "bgm-"));
   try {
     for (const spec of profile.renders) {
-      const targetPath = path.join(workspace.outputDir, spec.outputFile);
+      const targetPath = path.join(workspace.workDir, spec.outputFile);
       if (!fs.existsSync(targetPath)) continue;
       console.log(`BGM 合成: ${spec.outputFile}`);
       attachBgmToVideo(targetPath, bgmPath, tempDir);
     }
 
     if (includeTitle) {
-      const targetPath = path.join(workspace.outputDir, profile.title.outputFile);
+      const targetPath = path.join(workspace.workDir, profile.title.outputFile);
       if (fs.existsSync(targetPath)) {
         console.log(`BGM 合成: ${profile.title.outputFile}`);
         attachBgmToVideo(targetPath, bgmPath, tempDir);
@@ -1118,20 +1119,27 @@ async function main(): Promise<void> {
     console.log("ℹ  タイトルなし: --title=\"テキスト\" を指定するとオーバーレイを追加できます");
   }
 
-  copyOutputsToOutputDir(profile, workspace, includeTitle);
   if (toIdx >= STEP_ORDER.indexOf("render")) {
     applyBgmToOutputs(profile, workspace, includeTitle);
   }
+  copyOutputsToOutputDir(profile, workspace, includeTitle);
 
   console.log("=== 完了 ===");
   console.log("生成物:");
   if (toIdx >= STEP_ORDER.indexOf("render")) {
     for (const spec of profile.renders) {
+      if (spec.publishToDownloads === false) continue;
       console.log(`  - ${path.join(workspace.outputDir, spec.outputFile)}`);
     }
   }
   if (!noTitle && title && toIdx >= STEP_ORDER.indexOf("title")) {
     console.log(`  - ${path.join(workspace.outputDir, profile.title.outputFile)}`);
+  }
+  if (toIdx >= STEP_ORDER.indexOf("render")) {
+    for (const spec of profile.renders) {
+      if (spec.publishToDownloads !== false) continue;
+      console.log(`作業用出力: ${path.join(workspace.workDir, spec.outputFile)}`);
+    }
   }
   if (toIdx >= STEP_ORDER.indexOf("transcribe")) {
     console.log("途中ファイル:");

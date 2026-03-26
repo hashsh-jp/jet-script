@@ -16,6 +16,7 @@ export interface TranscribeSettings {
 export interface RenderSpec {
   compositionId: string;
   outputFile: string;
+  publishToDownloads?: boolean;
   getInputProps: (segments: Segment[], fps: number) => Record<string, unknown>;
 }
 
@@ -50,11 +51,13 @@ export const PROFILES: Record<string, Profile> = {
       {
         compositionId: "JetComposition",
         outputFile: "jet.mp4",
+        publishToDownloads: false,
         getInputProps: (segments, fps) => ({ segments, fps }),
       },
       {
         compositionId: "ScriptComposition",
         outputFile: "script.mp4",
+        publishToDownloads: true,
         getInputProps: (segments, fps) => ({ segments, fps }),
       },
     ],
