@@ -47,6 +47,19 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 brew --version
 ```
 
+1. Node.js 18 以上をインストールします。
+
+```bash
+brew install node
+```
+
+確認:
+
+```bash
+node -v
+npm -v
+```
+
 1. Git をインストールします。
 
 ```bash
