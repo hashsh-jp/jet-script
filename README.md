@@ -15,65 +15,80 @@
 
 ## Mac 環境構築
 
-新しい Mac でまだ開発環境が入っていない場合は、先に以下を実行してください。
+新しい Mac でまだ何も入っていない場合は、この順番で進めてください。  
+作業はすべて `ターミナル` アプリで行います。`Launchpad` や `Spotlight` で「ターミナル」と検索して開いてください。
 
-1. Xcode Command Line Tools を入れます。
+### 1. Xcode Command Line Tools を入れる
+
+以下を入力して Enter:
 
 ```bash
 xcode-select --install
 ```
 
-1. Homebrew をインストールします。
+画面が出たら、そのままインストールしてください。
+
+### 2. Homebrew を入れる
+
+以下を丸ごと貼り付けて Enter:
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Apple Silicon Mac では、案内に従って `~/.zprofile` に以下を追加してください。
+Apple Silicon Mac の場合、途中で `~/.zprofile` に追加するよう案内が出たら、その案内どおりに実行してください。よくある例はこれです。
 
 ```bash
 eval "$(/opt/homebrew/bin/brew shellenv)"
 ```
 
-反映:
-
-```bash
-eval "$(/opt/homebrew/bin/brew shellenv)"
-```
-
-1. Homebrew が使えることを確認します。
+### 3. Homebrew が使えるか確認する
 
 ```bash
 brew --version
 ```
 
-1. Node.js 18 以上をインストールします。
+数字が表示されれば成功です。
+
+### 4. Node.js を入れる
 
 ```bash
 brew install node
 ```
 
-確認:
+入ったか確認:
 
 ```bash
 node -v
 npm -v
 ```
 
-1. Git をインストールします。
+どちらも数字が表示されれば大丈夫です。
+
+### 5. Git を入れる
 
 ```bash
 brew install git
 ```
 
-1. Git の初期設定をします。
+確認:
+
+```bash
+git --version
+```
+
+### 6. Git の名前とメールアドレスを設定する
+
+自分の情報に置き換えて実行してください。
 
 ```bash
 git config --global user.name "Your Name"
 git config --global user.email "you@example.com"
 ```
 
-1. このリポジトリをクローンします。
+### 7. このリポジトリをダウンロードする
+
+デスクトップに置く例です。
 
 ```bash
 cd ~/Desktop
@@ -81,22 +96,52 @@ git clone <このリポジトリのURL>
 cd jet-script
 ```
 
-SSH でクローンしたい場合は、必要に応じて GitHub などの公開鍵設定も先に行ってください。
+フォルダに入れたか確認したい場合は、次を実行してください。
+
+```bash
+pwd
+ls
+```
 
 ## セットアップ
 
-Homebrew と Git の準備ができたら、このリポジトリ内で依存関係を入れます。
+ここからは `jet-script` フォルダの中で作業します。
+
+### 1. 依存関係を入れる
 
 ```bash
 npm install
+```
+
+少し時間がかかります。最後まで終われば OK です。
+
+### 2. 設定ファイルを作る
+
+```bash
 cp .env.example .env
 ```
 
-`.env` に API キーを設定してください。
+### 3. OpenAI API キーを入れる
+
+`.env` を開きます。たとえば TextEdit なら次です。
+
+```bash
+open -e .env
+```
+
+開いたら、次のように API キーを入れて保存してください。
 
 ```env
 OPENAI_API_KEY=sk-proj-...
 ```
+
+### 4. 動くか確認する
+
+```bash
+npm run typecheck
+```
+
+エラーが出なければ準備完了です。
 
 ## 配置
 

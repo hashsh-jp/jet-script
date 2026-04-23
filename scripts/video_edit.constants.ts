@@ -80,8 +80,10 @@ export const VIDEO_EDIT_SETTINGS = {
   },
   ai: {
     subtitleConcurrency: 5,
+    scriptDraftBatchSize: 20,
     maxRetries: 3,
     transcriptionModel: "whisper-1",
+    scriptDraftModel: "gpt-5.2",
     subtitleModel: "gpt-5.2",
     jsonRepairModel: "gpt-5.2",
   },
@@ -192,6 +194,31 @@ export function buildNaturalizePrompt(maxLineChars: number): string {
 - 前後文脈なしでも読める短文に寄せる
 - 隣接要素の内容を丸ごと移動しない。各要素は元の要素の範囲内で最小限に整える
 - formatted[i] は必ず texts[i] の内容のみを変換する。分割・結合・並び替えは禁止
+`.trim();
+}
+
+export function buildScriptDraftPrompt(maxLineChars: number): string {
+  return `
+あなたは動画全体の流れを整える台本エディターです。
+時系列順に並んだ日本語テキスト配列を見て、配列全体の流れを踏まえながら、それぞれを「動画の台本として自然な1要素」に整形し、JSONで返してください。
+
+【厳守】
+- 出力は {"formatted": [...]} のJSONのみ。説明文・Markdown禁止。
+- formatted の要素数は入力 texts と完全一致
+- 各要素は1つの文字列で返し、改行は入れない
+- 各要素はおおむね全角${Math.floor(maxLineChars * 3)}文字以内
+
+【台本化ルール】
+- 入力は動画の時系列順。前後要素も参考にして文脈を合わせる
+- ただし formatted[i] は必ず texts[i] の内容だけを整形する
+- 要素の分割・結合・並び替えは禁止
+- 元の意味は変えない
+- フィラー、言い淀み、重複、言い直しは削ってよい
+- 誤認識と思われる語は、前後文脈から妥当な表記に直してよい
+- 技術用語、製品名、コマンド、API名、ファイル名はできるだけ正式表記を保つ
+- 話し言葉の自然さは残しつつ、字幕に流しやすい滑らかな言い回しにする
+- 単語途中で終わる不自然な表現にしない
+- 前後の要素とつなげたとき、全体として読みやすい流れになるようにする
 `.trim();
 }
 

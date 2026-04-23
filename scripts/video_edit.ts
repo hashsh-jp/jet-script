@@ -11,6 +11,7 @@ import {
   buildLineFormatPrompt,
   buildNaturalizePrompt,
   buildRewritePrompt,
+  buildScriptDraftPrompt,
   buildTechnicalNormalizePrompt,
   PROFILES,
   SUBTITLE_DEVELOPER_PROMPT,
@@ -30,6 +31,74 @@ const {
 
 function round01(n: number): number {
   return Math.round(n * 10) / 10;
+}
+
+function repeat(char: string, count: number): string {
+  return new Array(count + 1).join(char);
+}
+
+function formatDurationSec(sec: number): string {
+  if (!Number.isFinite(sec) || sec < 0) return "--:--";
+  const totalSeconds = Math.round(sec);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}時間${String(minutes).padStart(2, "0")}分${String(seconds).padStart(2, "0")}秒`;
+  }
+  if (minutes > 0) {
+    return `${minutes}分${String(seconds).padStart(2, "0")}秒`;
+  }
+  return `${seconds}秒`;
+}
+
+function logSpacer(): void {
+  console.log("");
+}
+
+function logBanner(title: string, subtitle?: string): void {
+  const line = repeat("=", 68);
+  console.log(`\n${line}`);
+  console.log(`  ${title}`);
+  if (subtitle) console.log(`  ${subtitle}`);
+  console.log(line);
+}
+
+function logSection(title: string): void {
+  const line = repeat("-", 68);
+  console.log(`\n${line}`);
+  console.log(`【${title}】`);
+  console.log(line);
+}
+
+function logInfo(message: string): void {
+  console.log(`  ・${message}`);
+}
+
+function logMetric(label: string, value: string): void {
+  console.log(`  ${label.padEnd(12, " ")}: ${value}`);
+}
+
+function logStartStep(stepNo: number, title: string, detail?: string): number {
+  const startedAt = Date.now();
+  logSection(`工程 ${stepNo} | ${title}`);
+  if (detail) logInfo(detail);
+  logInfo("処理を開始します");
+  return startedAt;
+}
+
+function logEndStep(stepNo: number, title: string, startedAt: number): void {
+  const elapsed = formatDurationSec((Date.now() - startedAt) / 1000);
+  logInfo(`工程 ${stepNo}「${title}」が完了しました`);
+  logInfo(`所要時間: ${elapsed}`);
+}
+
+function logList(title: string, items: string[]): void {
+  if (items.length === 0) return;
+  console.log(`\n${title}`);
+  for (const item of items) {
+    console.log(`  - ${item}`);
+  }
 }
 
 function cleanText(text: string): string {
@@ -104,7 +173,7 @@ function syncBundledAssets(assetsDir: string): void {
 
   if (fs.existsSync(bundledBgmPath) && !fs.existsSync(targetBgmPath)) {
     fs.copyFileSync(bundledBgmPath, targetBgmPath);
-    console.log(`初期BGMをコピー: ${targetBgmPath}`);
+    logInfo(`初期BGMをコピーしました: ${targetBgmPath}`);
   }
 }
 
@@ -145,7 +214,7 @@ function hasAudioStream(videoPath: string): boolean {
     throw result.error;
   }
   if (result.status !== 0) {
-    throw new Error(`ffprobe failed with exit code: ${result.status ?? "unknown"}`);
+    throw new Error(`ffprobe の実行に失敗しました（終了コード: ${result.status ?? "不明"}）`);
   }
 
   return result.stdout.trim().length > 0;
@@ -209,7 +278,7 @@ function attachBgmToVideo(videoPath: string, bgmPath: string, tempDir: string): 
     throw result.error;
   }
   if (result.status !== 0) {
-    throw new Error(`ffmpeg (BGM attach) failed with exit code: ${result.status ?? "unknown"}`);
+    throw new Error(`BGM 合成用 ffmpeg の実行に失敗しました（終了コード: ${result.status ?? "不明"}）`);
   }
 
   fs.copyFileSync(mixedOutputPath, videoPath);
@@ -218,23 +287,24 @@ function attachBgmToVideo(videoPath: string, bgmPath: string, tempDir: string): 
 function applyBgmToOutputs(profile: Profile, workspace: WorkspacePaths, includeTitle: boolean): void {
   const bgmPath = path.join(workspace.assetsDir, "bgm.mp3");
   if (!fs.existsSync(bgmPath)) {
-    console.log("ℹ  BGM なし: bgm.mp3 が見つからないためスキップ");
+    logInfo("BGM ファイルが見つからないため、BGM 合成はスキップします");
     return;
   }
 
   const tempDir = fs.mkdtempSync(path.join(workspace.workDir, "bgm-"));
+  logSection("仕上げ | BGM 合成");
   try {
     for (const spec of profile.renders) {
       const targetPath = path.join(workspace.workDir, spec.outputFile);
       if (!fs.existsSync(targetPath)) continue;
-      console.log(`BGM 合成: ${spec.outputFile}`);
+      logInfo(`BGM を合成中: ${spec.outputFile}`);
       attachBgmToVideo(targetPath, bgmPath, tempDir);
     }
 
     if (includeTitle) {
       const targetPath = path.join(workspace.workDir, profile.title.outputFile);
       if (fs.existsSync(targetPath)) {
-        console.log(`BGM 合成: ${profile.title.outputFile}`);
+        logInfo(`BGM を合成中: ${profile.title.outputFile}`);
         attachBgmToVideo(targetPath, bgmPath, tempDir);
       }
     }
@@ -296,7 +366,7 @@ function createRenderProgressReporter(label: string, totalFrames: number): {
   let lastLineLength = 0;
   let lastPayload: RenderProgressPayload | null = null;
 
-  const writeLine = (line: string) => {
+    const writeLine = (line: string) => {
     if (!isTTY) {
       console.log(line);
       return;
@@ -311,7 +381,7 @@ function createRenderProgressReporter(label: string, totalFrames: number): {
     const now = Date.now();
     const progress = Math.min(Math.max(payload.progress, 0), 1);
     const percent = Math.round(progress * 100);
-    const stageLabel = payload.stitchStage === "encoding" ? "render" : "mux";
+    const stageLabel = payload.stitchStage === "encoding" ? "映像出力" : "音声結合";
     const renderedFrames = Math.min(payload.renderedFrames, totalFrames);
     const encodedFrames = Math.min(payload.encodedFrames, totalFrames);
     const renderedBucket = Math.floor(renderedFrames / progressFrameStep);
@@ -332,12 +402,12 @@ function createRenderProgressReporter(label: string, totalFrames: number): {
           : null;
 
     writeLine(
-      `  進捗 ${label} ` +
+      `  [進行中] ${label} ` +
         `[${buildProgressBar(progress)}] ${String(percent).padStart(3, " ")}%` +
         ` | ${stageLabel}` +
-        ` | frame ${renderedFrames}/${totalFrames}` +
-        ` | encode ${encodedFrames}/${totalFrames}` +
-        ` | ETA ${formatDurationMs(etaMs)}`
+        ` | フレーム ${renderedFrames}/${totalFrames}` +
+        ` | 書き出し ${encodedFrames}/${totalFrames}` +
+        ` | 残り ${formatDurationMs(etaMs)}`
     );
 
     lastStage = stageLabel;
@@ -388,7 +458,7 @@ async function transcribeSingleFile(
   const words = result.words;
 
   if (!words || words.length === 0) {
-    throw new Error("Whisper API: words が返されませんでした");
+    throw new Error("Whisper API から単語タイムスタンプが返されませんでした");
   }
 
   const factor = 1 / timeUnitSec;
@@ -585,12 +655,12 @@ async function processSingle(
       if (result) return result[0];
 
       if (attempt < ai.maxRetries) {
-        console.warn(`    警告: JSON不正。再試行 (${attempt + 1}/${ai.maxRetries})`);
+        console.warn(`  ・応答形式が崩れたため再試行します (${attempt + 1}/${ai.maxRetries})`);
       }
     } catch (error) {
       lastError = error;
       if (attempt < ai.maxRetries) {
-        console.warn(`    警告: API失敗。再試行 (${attempt + 1}/${ai.maxRetries})`);
+        console.warn(`  ・AI 呼び出しに失敗したため再試行します (${attempt + 1}/${ai.maxRetries})`);
       }
     }
   }
@@ -600,15 +670,62 @@ async function processSingle(
       const repaired = await parseOrRepairFormatted(openai, rawForRepair, 1);
       if (repaired) return repaired[0];
     } catch (error) {
-      console.warn(`    警告: JSON修復API失敗: ${(error as Error)?.message ?? error}`);
+      console.warn(`  ・JSON 修復に失敗しました: ${(error as Error)?.message ?? error}`);
     }
   }
 
   console.warn(
-    `    警告: 字幕処理失敗。元テキストを使用: "${text.slice(0, 20)}..."`,
+    `  ・字幕整形に失敗したため元の文を使います: "${text.slice(0, 20)}..."`,
     (lastError as Error)?.message ?? ""
   );
   return text;
+}
+
+async function processBatch(
+  openai: OpenAI,
+  texts: string[],
+  systemPrompt: string,
+  model: string
+): Promise<string[] | null> {
+  let rawForRepair = "";
+
+  for (let attempt = 0; attempt <= ai.maxRetries; attempt++) {
+    try {
+      const completion = await openai.chat.completions.create({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `texts=${JSON.stringify(texts)}` },
+          { role: "developer", content: SUBTITLE_DEVELOPER_PROMPT },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0,
+      });
+
+      rawForRepair = completion.choices[0].message.content ?? "";
+      const result = validateFormattedPayload(JSON.parse(rawForRepair), texts.length);
+      if (result) return result;
+
+      if (attempt < ai.maxRetries) {
+        console.warn(`  ・応答形式が崩れたため再試行します (${attempt + 1}/${ai.maxRetries})`);
+      }
+    } catch (error) {
+      if (attempt < ai.maxRetries) {
+        console.warn(`  ・AI 呼び出しに失敗したため再試行します (${attempt + 1}/${ai.maxRetries})`, (error as Error)?.message ?? error);
+      }
+    }
+  }
+
+  if (rawForRepair) {
+    try {
+      const repaired = await parseOrRepairFormatted(openai, rawForRepair, texts.length);
+      if (repaired) return repaired;
+    } catch (error) {
+      console.warn(`  ・JSON 修復に失敗しました: ${(error as Error)?.message ?? error}`);
+    }
+  }
+
+  return null;
 }
 
 async function processTextsParallel(
@@ -624,7 +741,7 @@ async function processTextsParallel(
     const chunk = texts.slice(i, i + ai.subtitleConcurrency);
     const chunkNum = Math.floor(i / ai.subtitleConcurrency) + 1;
     const chunkTotal = Math.ceil(total / ai.subtitleConcurrency);
-    console.log(`  [${label}] ${chunkNum}/${chunkTotal} (${chunk.length}件 並列処理中...)`);
+    logInfo(`${label} ${chunkNum}/${chunkTotal} を処理中（${chunk.length}件）`);
 
     const chunkResults = await Promise.all(
       chunk.map((text) => processSingle(openai, text, systemPrompt))
@@ -632,6 +749,35 @@ async function processTextsParallel(
 
     for (let j = 0; j < chunkResults.length; j++) {
       results[i + j] = chunkResults[j];
+    }
+  }
+
+  return results;
+}
+
+async function createScriptDraft(
+  openai: OpenAI,
+  texts: string[],
+  maxLineChars: number
+): Promise<string[]> {
+  const results: string[] = new Array(texts.length);
+  const batchSize = ai.scriptDraftBatchSize;
+  const totalBatches = Math.ceil(texts.length / batchSize);
+
+  for (let start = 0; start < texts.length; start += batchSize) {
+    const batch = texts.slice(start, start + batchSize);
+    const batchNum = Math.floor(start / batchSize) + 1;
+    logInfo(`台本化 ${batchNum}/${totalBatches} を処理中（${batch.length}件）`);
+
+    const drafted = await processBatch(
+      openai,
+      batch,
+      buildScriptDraftPrompt(maxLineChars),
+      ai.scriptDraftModel
+    );
+
+    for (let i = 0; i < batch.length; i++) {
+      results[start + i] = drafted?.[i] || batch[i];
     }
   }
 
@@ -723,7 +869,7 @@ async function stepTranscribe(profile: Profile, videoDir: string, workDir: strin
 
   const wavSizeMB = fs.statSync(wavPath).size / (1024 * 1024);
   console.log(`音声ファイルサイズ: ${wavSizeMB.toFixed(1)} MB`);
-  console.log("Whisper API 呼び出し中...");
+  console.log("Whisper で文字起こし中...");
 
   const whisperSegments =
     wavSizeMB > 24
@@ -731,9 +877,9 @@ async function stepTranscribe(profile: Profile, videoDir: string, workDir: strin
       : await transcribeSingleFile(openai, wavPath, settings.timeUnitSec);
 
   if (whisperSegments.length === 0) {
-    throw new Error("Whisper API からセグメントが取得できませんでした");
+    throw new Error("Whisper から文字起こし結果を取得できませんでした");
   }
-  console.log(`Whisper セグメント数: ${whisperSegments.length}`);
+  console.log(`文字起こし単位数: ${whisperSegments.length}`);
 
   const filtered = whisperSegments.filter((segment) => {
     const text = (segment.text ?? "").trim();
@@ -839,10 +985,39 @@ async function stepTranscribe(profile: Profile, videoDir: string, workDir: strin
     "utf-8"
   );
 
-  console.log("AI 字幕整形中...");
-  const refinedAll = await processSubtitles(
+  console.log("自動で台本化中...");
+  const draftedTexts = await createScriptDraft(
     openai,
     boundarySmoothed.map((segment) => segment.text),
+    maxLineChars
+  );
+
+  fs.writeFileSync(
+    path.join(tmpDir, "script_draft.json"),
+    JSON.stringify(
+      {
+        source: { videoPath: "base.mp4" },
+        segmentCount: draftedTexts.length,
+        fullText: draftedTexts.join("\n"),
+        segments: draftedTexts.map((text, i) => ({
+          id: `draft_${String(i).padStart(4, "0")}`,
+          text,
+          orig: {
+            start: boundarySmoothed[i]?.origStart ?? 0,
+            end: boundarySmoothed[i]?.origEnd ?? 0,
+          },
+        })),
+      },
+      null,
+      2
+    ),
+    "utf-8"
+  );
+
+  console.log("自動で字幕整形中...");
+  const refinedAll = await processSubtitles(
+    openai,
+    draftedTexts,
     maxLineChars
   );
 
@@ -1026,6 +1201,12 @@ async function stepTitle(
 type StepName = "transcribe" | "render" | "title";
 const STEP_ORDER: StepName[] = ["transcribe", "render", "title"];
 
+function getStepLabel(step: StepName): string {
+  if (step === "transcribe") return "文字起こし";
+  if (step === "render") return "レンダリング";
+  return "タイトル追加";
+}
+
 function parseArgs(): {
   profileName: string;
   fromStep: StepName;
@@ -1073,17 +1254,16 @@ async function main(): Promise<void> {
   const toIdx = STEP_ORDER.indexOf(toStep);
   const includeTitle = !noTitle && Boolean(title) && toIdx >= STEP_ORDER.indexOf("title");
 
-  console.log("\n=== video_edit ===");
+  console.log("\n=== 動画編集 ===");
   console.log(`  プロファイル : ${profileName}`);
-  console.log(`  開始ステップ : ${fromStep}`);
-  console.log(`  終了ステップ : ${toStep}`);
+  console.log(`  開始工程     : ${getStepLabel(fromStep)}`);
+  console.log(`  終了工程     : ${getStepLabel(toStep)}`);
   if (title) console.log(`  タイトル     : ${title}`);
-  console.log(`  downloadsDir : ${workspace.downloadsDir}`);
-  console.log(`  inputDir     : ${workspace.inputDir}`);
-  console.log(`  outputDir    : ${workspace.outputDir}`);
-  console.log(`  assetsDir    : ${workspace.assetsDir}`);
-  console.log(`  workDir      : ${workDir}`);
-  console.log(`  tmpDir       : ${tmpDir}\n`);
+  console.log(`  入力先       : ${workspace.inputDir}`);
+  console.log(`  出力先       : ${workspace.outputDir}`);
+  console.log(`  素材置き場   : ${workspace.assetsDir}`);
+  console.log(`  作業先       : ${workDir}`);
+  console.log(`  一時保存先   : ${tmpDir}\n`);
 
   ensureDir(workDir);
   ensureDir(tmpDir);
@@ -1094,27 +1274,27 @@ async function main(): Promise<void> {
   }
 
   if (fromIdx <= STEP_ORDER.indexOf("transcribe") && toIdx >= STEP_ORDER.indexOf("transcribe")) {
-    console.log("▶ STEP 0: base 動画準備");
+    console.log("▶ 工程 0: 元動画の準備");
     prepareCombinedBase(videoDir);
-    console.log("✅ STEP 0 完了\n");
+    console.log("✅ 工程 0 完了\n");
   }
 
   if (fromIdx <= STEP_ORDER.indexOf("transcribe") && toIdx >= STEP_ORDER.indexOf("transcribe")) {
-    console.log("▶ STEP 1: 文字起こし・セグメント生成");
+    console.log("▶ 工程 1: 文字起こしとセグメント生成");
     await stepTranscribe(profile, videoDir, workDir);
-    console.log("✅ STEP 1 完了\n");
+    console.log("✅ 工程 1 完了\n");
   }
 
   if (fromIdx <= STEP_ORDER.indexOf("render") && toIdx >= STEP_ORDER.indexOf("render")) {
-    console.log("▶ STEP 2: Remotion レンダリング");
+    console.log("▶ 工程 2: Remotion でレンダリング");
     await stepRender(profile, videoDir, workDir, workspace.remotionPublicDir);
-    console.log("✅ STEP 2 完了\n");
+    console.log("✅ 工程 2 完了\n");
   }
 
   if (!noTitle && title && fromIdx <= STEP_ORDER.indexOf("title") && toIdx >= STEP_ORDER.indexOf("title")) {
-    console.log("▶ STEP 3: タイトルオーバーレイ");
+    console.log("▶ 工程 3: タイトルの重ね合わせ");
     await stepTitle(profile, videoDir, title, workspace.remotionPublicDir);
-    console.log("✅ STEP 3 完了\n");
+    console.log("✅ 工程 3 完了\n");
   } else if (!noTitle && !title && toIdx >= STEP_ORDER.indexOf("title")) {
     console.log("ℹ  タイトルなし: --title=\"テキスト\" を指定するとオーバーレイを追加できます");
   }
@@ -1145,6 +1325,7 @@ async function main(): Promise<void> {
     console.log("途中ファイル:");
     console.log(`  - ${path.join(tmpDir, "scripts_base.json")}`);
     console.log(`  - ${path.join(tmpDir, "scripts_merged.json")}`);
+    console.log(`  - ${path.join(tmpDir, "script_draft.json")}`);
     console.log(`  - ${path.join(tmpDir, "scripts.json")}`);
   }
 }
