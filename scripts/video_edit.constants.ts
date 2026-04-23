@@ -51,12 +51,6 @@ export const PROFILES: Record<string, Profile> = {
     remotionEntry: "remotion/src/index.ts",
     renders: [
       {
-        compositionId: "JetComposition",
-        outputFile: "jet.mp4",
-        publishToDownloads: false,
-        getInputProps: (segments, fps) => ({ segments, fps }),
-      },
-      {
         compositionId: "ScriptComposition",
         outputFile: "script.mp4",
         publishToDownloads: true,
