@@ -205,6 +205,36 @@ base 連結だけ:
 npm run base-video
 ```
 
+## 安定化のコツ
+
+字幕の精度を安定させたいときは、[scripts/subtitle-priority-phrases.ts](./scripts/subtitle-priority-phrases.ts) を編集してください。  
+このファイルには「壊したくない表記」を並べてあります。
+
+たとえば、次のような語を追加すると安定しやすくなります。
+
+- 人名
+- 会社名
+- 商品名
+- 作品名
+- 地名
+- 業界用語
+- 英単語
+
+例:
+
+```ts
+export const SUBTITLE_PRIORITY_PHRASES = [
+  "ChatGPT",
+  "Claude Code",
+  "渋谷スクランブルスクエア",
+  "田中太郎",
+  "Pokémon",
+];
+```
+
+動画内でよく出る名前をこのファイルに足しておくと、字幕補正や台本化の段階で表記が崩れにくくなります。  
+新しいジャンルの動画を作る前に、そのジャンルの固有名詞を追加しておくのがおすすめです。
+
 ## 出力物
 
 - `~/Downloads/script.mp4`: 字幕付き版 + BGM

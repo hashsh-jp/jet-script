@@ -1,4 +1,4 @@
-import { TECHNICAL_TERM_PRIORITY_EXAMPLES } from "./technical-term-priority-examples";
+import { SUBTITLE_PRIORITY_PHRASES } from "./subtitle-priority-phrases";
 
 export interface Segment {
   id: string;
@@ -106,7 +106,7 @@ export const VIDEO_EDIT_SETTINGS = {
     terminalSegmentEndPattern: /[。！？!?]$/u,
   },
   promptTuning: {
-    technicalTermPriorityExamples: TECHNICAL_TERM_PRIORITY_EXAMPLES,
+    subtitlePriorityPhrases: SUBTITLE_PRIORITY_PHRASES,
   },
 } as const;
 
@@ -148,7 +148,7 @@ export function buildLineFormatPrompt(lines: 2 | 3, maxLineChars: number): strin
 - 助詞直後・単語の分断での改行は禁止
 - 単語途中で終わる不自然な字幕にしない
 - 前後文脈がなくても読める自然な字幕として成立させる
-- プログラミング用語、製品名、コマンド、API名のスペルは正式なスペルに修正する
+- 固有名詞、作品名、人物名、地名、商品名、英単語はできるだけ自然で正式な表記を保つ
 - 2行の長さがなるべく均等になる位置で改行する
 - formatted[i] は必ず texts[i] の内容のみを変換する。分割・結合・並び替えは禁止
 `.trim();
@@ -167,7 +167,7 @@ export function buildLineFormatPrompt(lines: 2 | 3, maxLineChars: number): strin
 - 助詞直後・単語の分断での改行は禁止
 - 単語途中で終わる不自然な字幕にしない
 - 前後文脈がなくても読める自然な字幕として成立させる
-- プログラミング用語、製品名、コマンド、API名のスペルは正式なスペルに修正する
+- 固有名詞、作品名、人物名、地名、商品名、英単語はできるだけ自然で正式な表記を保つ
 - 各行の長さがなるべく均等になるよう改行位置を選ぶ
 - formatted[i] は必ず texts[i] の内容のみを変換する。分割・結合・並び替えは禁止
 `.trim();
@@ -215,7 +215,7 @@ export function buildScriptDraftPrompt(maxLineChars: number): string {
 - 元の意味は変えない
 - フィラー、言い淀み、重複、言い直しは削ってよい
 - 誤認識と思われる語は、前後文脈から妥当な表記に直してよい
-- 技術用語、製品名、コマンド、API名、ファイル名はできるだけ正式表記を保つ
+- 固有名詞、作品名、人物名、地名、商品名、英単語、ファイル名はできるだけ自然で正式な表記を保つ
 - 話し言葉の自然さは残しつつ、字幕に流しやすい滑らかな言い回しにする
 - 単語途中で終わる不自然な表現にしない
 - 前後の要素とつなげたとき、全体として読みやすい流れになるようにする
@@ -224,13 +224,13 @@ export function buildScriptDraftPrompt(maxLineChars: number): string {
 
 export function buildTechnicalNormalizePrompt(
   maxLineChars: number,
-  technicalTermPriorityExamples: readonly string[]
+  subtitlePriorityPhrases: readonly string[]
 ): string {
-  const priorityExamples = technicalTermPriorityExamples.map((term) => `- ${term}`).join("\n");
+  const priorityExamples = subtitlePriorityPhrases.map((term) => `- ${term}`).join("\n");
 
   return `
-あなたは、プログラミング動画向けの字幕校正エディターです。
-与えられる日本語テキスト配列を、それぞれ「技術用語・コマンド表記を壊さずに読みやすくした1要素」に整え、JSONで返してください。
+あなたは、どんなジャンルの動画にも対応する字幕校正エディターです。
+与えられる日本語テキスト配列を、それぞれ「固有名詞や重要語を壊さずに読みやすくした1要素」に整え、JSONで返してください。
 
 【厳守】
 - 出力は {"formatted": [...]} のJSONのみ。説明文・Markdown禁止。
@@ -238,20 +238,20 @@ export function buildTechnicalNormalizePrompt(
 - 各要素は1つの文字列で返し、改行は入れない
 - 各要素はおおむね全角${Math.floor(maxLineChars * 3)}文字以内
 
-【技術用語ルール】
-- プログラミング用語、製品名、サービス名、コマンド、CLIオプション、ファイル名、API名は最優先で保護する
-- 技術用語は、意味が明確なら一般的で自然な正式表記に寄せてよい
-- ただし、推測で別の製品名に置き換えない
-- コマンド文字列や英字の識別子は、むやみにひらがな・カタカナ化しない
+【表記保護ルール】
+- 固有名詞、作品名、人物名、地名、ブランド名、サービス名、商品名、専門用語、英単語、数字列、ファイル名は最優先で保護する
+- 意味が明確なら、一般的で自然な正式表記に寄せてよい
+- ただし、推測で別の名前や別の作品・商品に置き換えない
+- 英字の単語や識別子は、むやみにひらがな・カタカナ化しない
 - 句読点追加や軽微な表記修正は可
-- 技術用語以外の意味は変えない
+- 元の意味は変えない
 
-【優先したい表記の例】
+【優先したい表記例】
 ${priorityExamples}
 
 【避けること】
-- 技術用語を一般語に言い換えすぎる
-- コマンドや製品名のスペルを崩す
+- 固有名詞や重要語を一般語に言い換えすぎる
+- 英単語や名前のスペルを崩す
 - 1つの要素にない情報を追加する
 - formatted[i] は必ず texts[i] の内容のみを変換する。分割・結合・並び替えは禁止
 `.trim();
@@ -275,7 +275,7 @@ export function buildRewritePrompt(maxLineChars: number): string {
 - 複数の話題が含まれる場合は最も重要な1つに絞る
 - 単語途中で終わる不自然な字幕にしない
 - 前後文脈がなくても読める自然な字幕にする
-- プログラミング用語、製品名、コマンド、API名のスペルは保護する
+- 固有名詞、作品名、人物名、地名、商品名、英単語の表記は保護する
 - formatted[i] は必ず texts[i] の内容のみを変換する。分割・結合・並び替えは禁止
 `.trim();
 }

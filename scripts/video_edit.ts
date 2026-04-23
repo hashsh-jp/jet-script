@@ -794,8 +794,8 @@ async function processSubtitles(
   const technicalNormalized = await processTextsParallel(
     openai,
     texts,
-    buildTechnicalNormalizePrompt(maxLineChars, promptTuning.technicalTermPriorityExamples),
-    "技術用語補正"
+    buildTechnicalNormalizePrompt(maxLineChars, promptTuning.subtitlePriorityPhrases),
+    "固有名詞と重要語の補正"
   );
 
   const naturalized = await processTextsParallel(

@@ -1,4 +1,6 @@
-export const TECHNICAL_TERM_PRIORITY_EXAMPLES = [
+// ここに追加した語は、字幕補正時に「壊したくない表記例」として優先されます。
+// 動画ジャンルに合わせて、作品名・人名・地名・ブランド名・商品名・専門用語などを足してください。
+export const SUBTITLE_PRIORITY_PHRASES = [
   "Claude Code",
   "BuzzTweet",
   "Claude Pro",
