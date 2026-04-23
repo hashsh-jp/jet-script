@@ -2,7 +2,10 @@
 /remotion/node_modules
 /node_modules
 .env
+/assets/*.mp4
+/assets/*.mov
 /base*.mp4
+/base*.mov
 /jet.mp4
 /script.mp4
 /titled.mp4
@@ -10,3 +13,4 @@
 /scripts_base.json
 /scripts_merged.json
 /remotion/public/base.mp4
+/remotion/public/*.mp4
